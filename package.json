@@ -1,0 +1,15 @@
+{
+  "name": "node-gyp-ship",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "bin": {
+  	"node-gyp-ship": "build",
+  	"node-gyp-ship-bundle": "bundle.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "BSD-2-Clause"
+}
