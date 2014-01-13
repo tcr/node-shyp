@@ -19,7 +19,8 @@ fs.readdirSync(builddir).forEach(function (file) {
 fs.writeFileSync(outdir + 'package.json', JSON.stringify({
 	name: bundle,
 	version: manifest.version,
-	os: [ process.platform ]
+	os: [ process.platform ],
+	arch: [ process.arch ]
 }));
 
 console.log(path.join(process.cwd(), 'build/bundle/'))
