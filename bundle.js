@@ -12,7 +12,7 @@ try {
 	fs.mkdirSync(outdir);
 } catch (e) { }
 fs.readdirSync(builddir).forEach(function (file) {
-	if (fs.lstatSync(builddir + file).isFile() && file.match(/\.(exp|lib|node|dylib)$/)) {
+	if (fs.lstatSync(builddir + file).isFile() && file.match(/\.(exp|lib|node|dylib|exe)$/)) {
 		fs.writeFileSync(outdir + file, fs.readFileSync(builddir + file));
 	}
 })
