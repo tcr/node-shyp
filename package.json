@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "bin": {
-  	"node-gyp-ship": "build",
-  	"node-gyp-ship-bundle": "bundle.js"
+  	"node-gyp-ship": "./build.cmd",
+  	"node-gyp-ship-bundle": "./bundle.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
