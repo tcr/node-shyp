@@ -50,7 +50,7 @@ if (process.argv[2] == 'publish') {
 			var outdirabi = outdir + abi + '/';
 			mkdirp(outdirabi, function (err) {
 				fs.readdirSync(builddir).forEach(function (file) {
-					if (fs.lstatSync(builddir + file).isFile() && file.match(/\.(exp|lib|node|dylib|exe)$|^[^.]+$/)) {
+					if (fs.lstatSync(builddir + file).isFile() && file.match(/\.(exp|lib|node|dylib|exe|dll)$|^[^.]+$/)) {
 						fs.writeFileSync(outdirabi + file, fs.readFileSync(builddir + file), {
 							mode: fs.lstatSync(builddir + file).mode
 						});
