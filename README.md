@@ -1,6 +1,16 @@
 # node-shyp
 
-Precompile your node modules.
+Precompile your node modules, use npm as your data store:
+
+```
+coolmodule
+optional:
+  coolmodule-shyp-win32-x64
+  coolmodule-shyp-win32-ia32
+  coolmodule-shyp-darwin-x64
+  coolmodule-shyp-darwin-ia32
+  ...
+```
 
 ## Installation
 
