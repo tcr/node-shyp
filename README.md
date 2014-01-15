@@ -14,13 +14,13 @@ npm install -g git+https://github.com/tcr/node-shyp
 
 node-shyp is simple. All your node-gyp configuration works as before, with just a few modifications to `package.json`.
 
-#### 1. Run `node-shyp-init` to create `shyp` directory with default files
+#### 1. Run `node-shyp-init` to create default `shyp-blacklist.js` file in your root
 
 #### 2. Set your "install" script to blacklist compiled platforms on npm install
 
 ```
 "scripts": {
-	"install": "node ./shyp/blacklist.js win32-x64 [etc...] || node-gyp rebuild"
+	"install": "node shyp-blacklist.js win32-x64 [etc...] || node-gyp rebuild"
 }
 ```
 
