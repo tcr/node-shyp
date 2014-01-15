@@ -7,7 +7,7 @@ Precompile your node modules.
 To install
 
 ```
-npm install -g git+https://github.com/tcr/node-shyp
+npm install -g node-shyp
 ```
 
 ## Instructions

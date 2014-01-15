@@ -6,6 +6,19 @@ var async = require('async');
 var mkdirp = require('mkdirp');
 var rimraf = require('rimraf');
 
+function child (proc, args, opts) {
+	args = args || [];
+	opts = opts || {};
+
+	if (process.os == 'win32') {
+		args = ['/c', proc].concat(args);
+		proc = process.env.comspec;
+	}
+	opts.cwd = opts.cwd || process.cwd();
+	opts.stdio = 'inherit';
+	return spawn(proc, args, opts);
+}
+
 if (process.argv[2] == 'publish') {
 	var manifest = require(path.join(process.cwd(), './package.json'));
 	var bundle = manifest.name + '-shyp-' + process.platform + '-' + process.arch;
@@ -27,10 +40,7 @@ if (process.argv[2] == 'publish') {
 	rimraf.sync(outdir);
 
 	async.eachSeries(Object.keys(abis), function (abi, next) {
-		var gyp = spawn('node-gyp', ['rebuild', '--target=' + abis[abi]], {
-			cwd: process.cwd(),
-			stdio: 'inherit'
-		});
+		var gyp = child('node-gyp', ['rebuild', '--target=' + abis[abi]]);
 		gyp.on('close', function (code) {
 			if (code) {
 				console.error('Could not build for module abi ' + abi + ' (node version ' + abis[abi] + '), brb dying.');
@@ -59,9 +69,8 @@ if (process.argv[2] == 'publish') {
 		console.error('\nPublishing "' + outdir + '"...');
 
 		if (process.argv[3] != '--dry') {
-			var npm = spawn('npm', ['publish', '-f'], {
-				cwd: outdir,
-				stdio: 'inherit'
+			var npm = child('npm', ['publish', '-f'], {
+				cwd: outdir
 			});
 			npm.on('close', function (code) {
 				process.exit(code);
@@ -77,8 +86,7 @@ if (process.argv[2] == 'publish') {
 	console.error('done. add this to your package.json:');
 	console.log('\n{\n  "scripts": {\n    "install": "node shyp-blacklist.js win32-x64 [etc...] || node-gyp rebuild"\n  }\n}');
 } else {
-	var gyp = spawn('node-gyp', process.argv.slice(2), {
-		cwd: process.cwd(),
+	var gyp = child('node-gyp', process.argv.slice(2), {
 		stdio: 'inherit'
 	});
 	gyp.on('close', function (code) {
