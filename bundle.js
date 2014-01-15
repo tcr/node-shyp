@@ -2,7 +2,7 @@
 var fs = require('fs');
 var path = require('path');
 
-var manifest = require(path.join(process.cwd(), '../package.json'));
+var manifest = require(path.join(process.cwd(), './package.json'));
 
 var bundle = manifest.name + '-shyp-' + process.platform + '-' + process.arch;
 var outdir =  './build/bundle/';

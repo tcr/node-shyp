@@ -3,12 +3,12 @@
 To install
 
 ```
-npm install git+https://github.com/tcr/node-gyp-ship
+npm install -g git+https://github.com/tcr/node-shyp
 ```
 
 To use
 
 ```
-node-gyp-ship-init # first run
-node-gyp-ship
+node-shyp-init # first run
+node-shyp # publish
 ```
