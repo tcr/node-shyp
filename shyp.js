@@ -4,11 +4,12 @@ var path = require('path');
 var spawn = require('child_process').spawn;
 var async = require('async');
 var mkdirp = require('mkdirp');
+var rimraf = require('rimraf');
 
 if (process.argv[2] == 'publish') {
 	var manifest = require(path.join(process.cwd(), './package.json'));
 	var bundle = manifest.name + '-shyp-' + process.platform + '-' + process.arch;
-	var outdir =  './build/bundle/';
+	var outdir =  './build/shyp/';
 	var builddir = './build/' + (process.config.target_defaults.defaut_configuration || 'Release') + '/'; // TODO
 
 	// process.versions.modules added in >= v0.10.4 and v0.11.7
@@ -22,6 +23,8 @@ if (process.argv[2] == 'publish') {
 	var abis = {};
 	abis[getNodeModuleABI()] = process.versions.node;
 	// TODO more
+
+	rimraf.sync(outdir);
 
 	async.eachSeries(Object.keys(abis), function (abi, next) {
 		var gyp = spawn('node-gyp', ['rebuild', '--target=' + abis[abi]], {
@@ -46,8 +49,6 @@ if (process.argv[2] == 'publish') {
 			})
 		})
 	}, function () {
-		console.error('\nPublishing...');
-
 		fs.writeFileSync(outdir + 'package.json', JSON.stringify({
 			name: bundle,
 			version: manifest.version,
@@ -55,13 +56,17 @@ if (process.argv[2] == 'publish') {
 			arch: [ process.arch ]
 		}));
 
-		var npm = spawn('npm', ['publish', '-f'], {
-			cwd: outdir,
-			stdio: 'inherit'
-		});
-		npm.on('close', function (code) {
-			process.exit(code);
-		});
+		console.error('\nPublishing "' + outdir + '"...');
+
+		if (process.argv[3] != '--dry') {
+			var npm = spawn('npm', ['publish', '-f'], {
+				cwd: outdir,
+				stdio: 'inherit'
+			});
+			npm.on('close', function (code) {
+				process.exit(code);
+			});
+		}
 	})
 } else if (process.argv[2] == 'init') {
 	var fs = require('fs');
@@ -69,7 +74,8 @@ if (process.argv[2] == 'publish') {
 		console.log('writing ' + file + '...');
 		fs.writeFileSync(file, fs.readFileSync(__dirname + '/bin/' + file));
 	});
-	console.error('done.')
+	console.error('done. add this to your package.json:');
+	console.log('\n{\n  "scripts": {\n    "install": "node shyp-blacklist.js win32-x64 [etc...] || node-gyp rebuild"\n  }\n}');
 } else {
 	var gyp = spawn('node-gyp', process.argv.slice(2), {
 		cwd: process.cwd(),
