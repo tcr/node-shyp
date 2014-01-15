@@ -64,6 +64,11 @@ if (process.argv[2] == 'publish') {
 		fs.writeFileSync(outdir + 'package.json', JSON.stringify({
 			name: bundle,
 			version: manifest.version,
+			description: 'Compiled version of ' + JSON.stringify(manifest.name) + '" for ' + process.platform + '-' + process.arch,
+			repository: manifest.repository || {
+				"type" : "git"
+			  , "url" : "http://github.com/tcr/node-shyp.git"
+			},
 			os: [ process.platform ],
 			arch: [ process.arch ]
 		}));
