@@ -1,1 +1,0 @@
-node-gyp rebuild && node-shyp-bundle && cd build/bundle && npm publish -f && cd ../..

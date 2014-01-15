@@ -14,7 +14,7 @@ npm install -g git+https://github.com/tcr/node-shyp
 
 node-shyp is simple. All your node-gyp configuration works as before, with just a few modifications to `package.json`.
 
-#### 1. Run `node-shyp-init` to create default `shyp-blacklist.js` file in your root
+#### 1. Run `node-shyp init` to create default `shyp-blacklist.js` file in your root
 
 #### 2. Set your "install" script to blacklist compiled platforms on npm install
 
@@ -38,7 +38,7 @@ Node will only install those dependencies that match your arch/platform (due to 
 }
 ```
 
-#### 4. Run `node-shyp` from the root directory on each platform you build for.
+#### 4. Run `node-shyp publish` from the root directory on each platform you build for.
 
 This will publish the compiled versions of the code to npm.
 
@@ -49,10 +49,6 @@ Just like the `bindings` module.
 ```
 module.exports = require('bindings-shyp')('canvas')
 ```
-
-## What about ABI compatibility?
-
-Uh, no ideas. Any takers? It'd be best if it didn't clutter the number of packages. Perhaps a "multicompile".
 
 ## License 
 
