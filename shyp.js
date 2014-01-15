@@ -10,7 +10,7 @@ function child (proc, args, opts) {
 	args = args || [];
 	opts = opts || {};
 
-	if (process.os == 'win32') {
+	if (process.platform == 'win32') {
 		args = ['/c', proc].concat(args);
 		proc = process.env.comspec;
 	}
