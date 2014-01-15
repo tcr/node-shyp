@@ -4,7 +4,7 @@ var path = require('path');
 
 var manifest = require(path.join(process.cwd(), '../package.json'));
 
-var bundle = manifest.name + '-bin-' + process.platform + '-' + process.arch;
+var bundle = manifest.name + '-shyp-' + process.platform + '-' + process.arch;
 var outdir =  './build/bundle/';
 var builddir = './build/' + (process.config.target_defaults.defaut_configuration || 'Release') + '/';
 

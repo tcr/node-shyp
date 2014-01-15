@@ -1,1 +1,1 @@
-node-gyp rebuild && node-gyp-ship-bundle && cd build/bundle && npm publish -f && cd ../..
+node-gyp rebuild && node-shyp-bundle && cd build/bundle && npm publish -f && cd ../..

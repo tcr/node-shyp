@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "bin": {
-  	"node-gyp-ship": "./build.cmd",
-  	"node-gyp-ship-bundle": "./bundle.js",
-    "node-gyp-ship-init": "./init.js"
+  	"node-shyp": "./build.cmd",
+  	"node-shyp-bundle": "./bundle.js",
+    "node-shyp-init": "./init.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
