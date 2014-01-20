@@ -6,20 +6,92 @@ var async = require('async');
 var mkdirp = require('mkdirp');
 var rimraf = require('rimraf');
 
-function child (proc, args, opts) {
-	args = args || [];
-	opts = opts || {};
+/**
+
+  Usage: node-gyp <command> [options]
+
+  where <command> is one of:
+    - build - Invokes `make` and builds the module
+    - clean - Removes any generated build files and the "out" dir
+    - configure - Generates a Makefile for the current module
+    - rebuild - Runs "clean", "configure" and "build" all at once
+    - install - Install node development files for the specified node version.
+    - list - Prints a listing of the currently installed node development files
+    - remove - Removes the node development files for the specified version
+
+  for specific command usage and options try:
+    $ node-gyp <command> --help
+
+node-gyp@0.12.1  /usr/local/lib/node_modules/node-gyp
+node@0.10.18
+
+**/
+
+function cmd (path, args, opts, next)
+{
+  opts.cwd = opts.cwd || process.cwd();
 
 	if (process.platform == 'win32') {
-		args = ['/c', proc].concat(args);
-		proc = process.env.comspec;
+		args = ['/c', path].concat(args);
+		path = process.env.comspec;
 	}
-	opts.cwd = opts.cwd || process.cwd();
-	opts.stdio = 'inherit';
-	return spawn(proc, args, opts);
+
+  var proc = spawn(path, args, opts);
+
+  if (opts.encoding) {
+    proc.stdout.setEncoding(opts.encoding);
+    proc.stderr.setEncoding(opts.encoding);
+  }
+  if (opts.verbose) {
+    proc.stdout.pipe((typeof opts.verbose == 'object' ? opts.verbose : process).stdout);
+    proc.stderr.pipe((typeof opts.verbose == 'object' ? opts.verbose : process).stderr);
+  }
+
+  var stdout = [], stderr = [];
+  proc.stdout.on('data', function (data) {
+    stdout.push(data);
+  })
+  proc.stderr.on('data', function (data) {
+    stderr.push(data);
+  })
+  proc.on('exit', function (code) {
+    if (opts.encoding) {
+      var out = stdout.join('');
+      var err = stderr.join('');
+    } else {
+      var out = Buffer.concat(stdout);
+      var err = Buffer.concat(stderr);
+    }
+    next && next(code, out, err);
+  });
+  proc.on('error', function (data) {
+    stderr.push(new Buffer(data.toString()));
+  })
+
+  return proc;
 }
 
-if (process.argv[2] == 'publish') {
+function gyp (type, args, opts, next)
+{
+	return cmd('node-gyp', [type].concat(args || []), opts, next);
+}
+
+// returns a promise
+function npm (type, args, opts, next)
+{
+  return cmd((process.platform == 'win32' ? 'npm.cmd' : 'npm'), [type].concat(args || []), opts, next);
+}
+
+
+
+
+
+var shyp = module.exports;
+
+shyp.test = npm.bind(null, 'test');
+
+shyp.publish = function (args, opts, next)
+{
 	var manifest = require(path.join(process.cwd(), './package.json'));
 	var bundle = manifest.name + '-shyp-' + process.platform + '-' + process.arch;
 	var outdir =  './build/shyp/';
@@ -40,8 +112,9 @@ if (process.argv[2] == 'publish') {
 	rimraf.sync(outdir);
 
 	async.eachSeries(Object.keys(abis), function (abi, next) {
-		var gyp = child('node-gyp', ['rebuild', '--target=' + abis[abi]]);
-		gyp.on('close', function (code) {
+		gyp('rebuild', ['--target=' + abis[abi]], {
+			verbose: true
+		}, function (code) {
 			if (code) {
 				console.error('Could not build for module abi ' + abi + ' (node version ' + abis[abi] + '), brb dying.');
 				process.exit(1);
@@ -75,16 +148,17 @@ if (process.argv[2] == 'publish') {
 
 		console.error('\nPublishing "' + outdir + '"...');
 
-		if (process.argv[3] != '--dry') {
-			var npm = child('npm', ['publish', '-f'], {
-				cwd: outdir
-			});
-			npm.on('close', function (code) {
-				process.exit(code);
-			});
+		if (args.indexOf('--dry') == -1) {
+			npm('publish', ['-f'], {
+				cwd: outdir,
+				verbose: true
+			}, next);
 		}
 	})
-} else if (process.argv[2] == 'init') {
+}
+
+shyp.init = function ()
+{
 	var fs = require('fs');
 	fs.readdirSync(__dirname + '/bin').forEach(function (file) {
 		console.log('writing ' + file + '...');
@@ -92,11 +166,28 @@ if (process.argv[2] == 'publish') {
 	});
 	console.error('done. add this to your package.json:');
 	console.log('\n{\n  "scripts": {\n    "install": "node shyp-blacklist.js win32-x64 [etc...] || node-gyp rebuild"\n  }\n}');
-} else {
-	var gyp = child('node-gyp', process.argv.slice(2), {
-		stdio: 'inherit'
-	});
-	gyp.on('close', function (code) {
-		process.exit(code);
-	});
+}
+
+shyp.build = gyp.bind(null, 'build')
+shyp.clean = gyp.bind(null, 'clean')
+shyp.configure = gyp.bind(null, 'configure')
+shyp.rebuild = gyp.bind(null, 'rebuild')
+shyp.install = gyp.bind(null, 'install')
+shyp.list = gyp.bind(null, 'list')
+shyp.remove = gyp.bind(null, 'remove')
+
+if (require.main === module) {
+	if (shyp.hasOwnProperty(process.argv[2])) {
+		shyp[process.argv[2]](process.argv.slice(3), {
+			verbose: true
+		}, function (code) {
+			process.exit(code);
+		});
+	} else {
+		console.error('Usage:');
+		Object.keys(shyp).forEach(function (a) {
+			console.error('    node-shyp ' + a);
+		});
+		process.exit(1);
+	}
 }
