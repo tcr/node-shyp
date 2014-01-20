@@ -88,7 +88,21 @@ function npm (type, args, opts, next)
 
 var shyp = module.exports;
 
-shyp.test = npm.bind(null, 'test');
+shyp.test = function (args, opts, next) {
+	npm('install', [], opts, function (code, stdout, stderr) {
+		if (code) {
+			next(code, stdout, stderr);
+		} else {
+			gyp('rebuild', [], opts, function (code, stdout, stderr) {
+				if (code) {
+					next(code, stdout, stderr);
+				} else {
+					npm('test', args, opts, next);
+				}
+			});
+		}
+	});
+}
 
 shyp.publish = function (args, opts, next)
 {
