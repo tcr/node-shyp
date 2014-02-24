@@ -170,11 +170,16 @@ shyp.publish = function (args, opts, next)
       request('http://registry.npmjs.org/' + bundle + '/', {
         json: true,
       }, function (err, req, body) {
-        var lastversion = (body && body['dist-tags'] && body['dist-tags']['latest']);
+        var lastversion = (body && Object.keys(body.time).filter(function (a) {
+          return semver.valid(a) && a.match(/\-/);
+        }).sort(semver.rcompare)[0]);
         if (lastversion) {
           console.error('LAST SHYP VERSION:'.green, lastversion);
         }
-        var nextversion = !lastversion || semver.gt(manifest.version, lastversion, true)
+
+        // Inc prerelease to ensure manifest.version isn't *gt* than lastversion
+        // because it lacks a prerelease tag.
+        var nextversion = !lastversion || semver.gt(semver.inc(manifest.version, 'prerelease', false), lastversion, true)
           ? semver.inc(manifest.version, 'prerelease', false)
           : semver.inc(lastversion, 'prerelease', false);
         console.error('NEXT SHYP VERSION:'.green, nextversion);
@@ -183,7 +188,7 @@ shyp.publish = function (args, opts, next)
         fs.writeFileSync(outdir + 'package.json', JSON.stringify({
           name: bundle,
           version: nextversion,
-          description: 'Compiled version of ' + JSON.stringify(manifest.name) + '" for ' + process.platform + '-' + process.arch,
+          description: 'Compiled version of "' + manifest.name + '" for ' + process.platform + '-' + process.arch,
           repository: manifest.repository || {
             "type" : "git"
             , "url" : "http://github.com/tcr/node-shyp.git"
