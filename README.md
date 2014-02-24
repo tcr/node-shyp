@@ -30,7 +30,7 @@ node-shyp is simple. All your node-gyp configuration works as before, with just 
 
 ```
 "scripts": {
-	"install": "node shyp-blacklist.js win32-x64 [etc...] || node-gyp rebuild"
+	"install": "node shyp-blacklist.js module-name win32-x64 [etc...] || node-gyp rebuild"
 }
 ```
 
@@ -59,6 +59,15 @@ Just like the `bindings` module.
 ```
 module.exports = require('bindings-shyp')('canvas')
 ```
+
+## Building against Node versions
+
+You should compile a version for each Node version you intend to publish. (As of Feb 2013, releasing for stable versions means building against 0.8.26 and 0.10.26.)
+
+* `0.8.x` uses the tag "v8.3-11" for its node version.
+* `0.10.x` uses the tag "v8.3-14" until `0.10.4`, where NODE_MODULE_VERSION is exposed. Shyp hardcodes this version to equal "node-v11".
+* `0.10.4` onward uses "node-v11".
+* `0.11.x` uses "node-v14".
 
 ## License 
 
