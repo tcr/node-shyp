@@ -114,15 +114,20 @@ shyp.publish = function (args, opts, next)
 
 	// process.versions.modules added in >= v0.10.4 and v0.11.7
 	// https://github.com/joyent/node/commit/ccabd4a6fa8a6eb79d29bc3bbe9fe2b6531c2d8e
-	function getNodeModuleABI () {
+	function nodeABI () {
 		return process.versions.modules
 			? 'node-v' + (+process.versions.modules)
-			: 'v8-' + process.versions.v8.split('.').slice(0,2).join('.');
+			: process.versions.v8.match(/^3\.14\./)
+				? 'node-v11'
+				: 'v8-' + process.versions.v8.split('.').slice(0,2).join('.');
 	}
 
-	var abis = {};
-	abis[getNodeModuleABI()] = process.versions.node;
-	// TODO more
+	// TODO have this be customizable.
+	var abis = {
+		'v8-3.11': '0.8.26',
+		'node-v11': '0.10.26'
+	};
+	abis[nodeABI()] = process.versions.node;
 
 	rimraf.sync(outdir);
 

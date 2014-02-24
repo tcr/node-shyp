@@ -62,7 +62,7 @@ module.exports = require('bindings-shyp')('canvas')
 
 ## Building against Node versions
 
-You should compile a version for each Node version you intend to publish. (As of Feb 2013, releasing for stable versions means building against 0.8.26 and 0.10.26.)
+Shyp automatically compiles against multiple Node versions for compatibility. (As of Feb 2013, releasing for stable versions means building against 0.8.26 and 0.10.26.) These are hardcoded though they probably shouldn't be.
 
 * `0.8.x` uses the tag "v8.3-11" for its node version.
 * `0.10.x` uses the tag "v8.3-14" until `0.10.4`, where NODE_MODULE_VERSION is exposed. Shyp hardcodes this version to equal "node-v11".
