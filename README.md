@@ -42,7 +42,7 @@ Node will only install those dependencies that match your arch/platform (due to 
 {
 	"version": "1.1.3",
 	"optionalDependencies": {
-       "coolmodule-shyp-win32-x64": "1.1.3",
+       "coolmodule-shyp-win32-x64": "1.1.x",
        ...
     }
 }
