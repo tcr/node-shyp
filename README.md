@@ -30,7 +30,7 @@ node-shyp is simple. All your node-gyp configuration works as before, with just 
 
 ```
 "scripts": {
-	"install": "node shyp-blacklist.js module-name win32-x64 [etc...] || node-gyp rebuild"
+	"install": "node shyp-blacklist.js win32-x64 [etc...] || node-gyp rebuild"
 }
 ```
 
