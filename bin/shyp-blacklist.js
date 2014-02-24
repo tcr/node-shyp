@@ -1,5 +1,5 @@
 // process.argv is the module name, then a list of versions to compile for.
-// check this (platform, arch) tuple matches, 
+// check this (platform, arch) tuple matches,
 // then check that the ABI for this version was compiled.
 function nodeABI () {
 	return process.versions.modules

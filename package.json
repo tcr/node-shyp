@@ -1,6 +1,6 @@
 {
   "name": "node-shyp",
-  "version": "0.2.0-1",
+  "version": "0.2.2",
   "description": "",
   "main": "shyp.js",
   "bin": {
@@ -16,6 +16,9 @@
     "async": "~0.2.9",
     "mkdirp": "~0.3.5",
     "rimraf": "~2.2.5",
-    "dnode": "~1.2.0"
+    "dnode": "~1.2.0",
+    "colors": "~0.6.2",
+    "semver": "~2.2.1",
+    "request": "~2.34.0"
   }
 }

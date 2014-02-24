@@ -5,6 +5,9 @@ var spawn = require('child_process').spawn;
 var async = require('async');
 var mkdirp = require('mkdirp');
 var rimraf = require('rimraf');
+var request = require('request');
+var semver = require('semver');
+require('colors');
 
 /**
 
@@ -31,10 +34,10 @@ function cmd (path, args, opts, next)
 {
   opts.cwd = opts.cwd || process.cwd();
 
-	if (process.platform == 'win32') {
-		args = ['/c', path].concat(args);
-		path = process.env.comspec;
-	}
+  if (process.platform == 'win32') {
+    args = ['/c', path].concat(args);
+    path = process.env.comspec;
+  }
 
   var proc = spawn(path, args, opts);
 
@@ -74,7 +77,7 @@ function cmd (path, args, opts, next)
 
 function gyp (type, args, opts, next)
 {
-	return cmd('node-gyp', [type].concat(args || []), opts, next);
+  return cmd('node-gyp', [type].concat(args || []), opts, next);
 }
 
 // returns a promise
@@ -90,102 +93,127 @@ function npm (type, args, opts, next)
 var shyp = module.exports;
 
 shyp.test = function (args, opts, next) {
-	npm('install', [], opts, function (code, stdout, stderr) {
-		if (code) {
-			next(code, stdout, stderr);
-		} else {
-			gyp('rebuild', [], opts, function (code, stdout, stderr) {
-				if (code) {
-					next(code, stdout, stderr);
-				} else {
-					npm('test', args, opts, next);
-				}
-			});
-		}
-	});
+  npm('install', [], opts, function (code, stdout, stderr) {
+    if (code) {
+      next(code, stdout, stderr);
+    } else {
+      gyp('rebuild', [], opts, function (code, stdout, stderr) {
+        if (code) {
+          next(code, stdout, stderr);
+        } else {
+          npm('test', args, opts, next);
+        }
+      });
+    }
+  });
 }
 
 shyp.publish = function (args, opts, next)
 {
-	var manifest = require(path.join(process.cwd(), './package.json'));
-	var bundle = manifest.name + '-shyp-' + process.platform + '-' + process.arch;
-	var outdir =  './build/shyp/';
-	var builddir = './build/' + (process.config.target_defaults.defaut_configuration || 'Release') + '/'; // TODO
+  var manifest = require(path.join(process.cwd(), './package.json'));
+  var bundle = manifest.name + '-shyp-' + process.platform + '-' + process.arch;
+  var outdir =  './build/shyp/';
+  var builddir = './build/' + (process.config.target_defaults.defaut_configuration || 'Release') + '/'; // TODO
 
-	// process.versions.modules added in >= v0.10.4 and v0.11.7
-	// https://github.com/joyent/node/commit/ccabd4a6fa8a6eb79d29bc3bbe9fe2b6531c2d8e
-	function nodeABI () {
-		return process.versions.modules
-			? 'node-v' + (+process.versions.modules)
-			: process.versions.v8.match(/^3\.14\./)
-				? 'node-v11'
-				: 'v8-' + process.versions.v8.split('.').slice(0,2).join('.');
-	}
+  // process.versions.modules added in >= v0.10.4 and v0.11.7
+  // https://github.com/joyent/node/commit/ccabd4a6fa8a6eb79d29bc3bbe9fe2b6531c2d8e
+  function nodeABI () {
+    return process.versions.modules
+      ? 'node-v' + (+process.versions.modules)
+      : process.versions.v8.match(/^3\.14\./)
+        ? 'node-v11'
+        : 'v8-' + process.versions.v8.split('.').slice(0,2).join('.');
+  }
 
-	// TODO have this be customizable.
-	var abis = {
-		'v8-3.11': '0.8.26',
-		'node-v11': '0.10.26'
-	};
-	abis[nodeABI()] = process.versions.node;
+  // TODO have this be customizable.
+  var abis = {
+    'v8-3.11': '0.8.26',
+    'node-v11': '0.10.26'
+  };
+  abis[nodeABI()] = process.versions.node;
 
-	rimraf.sync(outdir);
+  rimraf.sync(outdir);
 
-	async.eachSeries(Object.keys(abis), function (abi, next) {
-		gyp('rebuild', ['--target=' + abis[abi]], {
-			verbose: true
-		}, function (code) {
-			if (code) {
-				console.error('Could not build for module abi ' + abi + ' (node version ' + abis[abi] + '), brb dying.');
-				process.exit(1);
-			}
+  gyp('clean', [], {
+    verbose: true
+  }, function (code) {
+    async.eachSeries(Object.keys(abis), function (abi, next) {
+      gyp('configure', ['--target=' + abis[abi]], {
+        verbose: true
+      }, function (code) {
+        gyp('build', ['--target=' + abis[abi]], {
+          verbose: true
+        }, function (code) {
+          if (code) {
+            console.error('ERR'.red, 'Could not build for module abi ' + abi + ' (node version ' + abis[abi] + '), brb dying.');
+            process.exit(1);
+          } else {
+            console.error('AOK'.green, 'Compiled for abi', abi, '\n\n');
+          }
 
-			var outdirabi = outdir + abi + '/';
-			mkdirp(outdirabi, function (err) {
-				fs.readdirSync(builddir).forEach(function (file) {
-					if (fs.lstatSync(builddir + file).isFile() && file.match(/\.(exp|lib|node|dylib|exe|dll)$|^[^.]+$/)) {
-						fs.writeFileSync(outdirabi + file, fs.readFileSync(builddir + file), {
-							mode: fs.lstatSync(builddir + file).mode
-						});
-					}
-				})
+          var outdirabi = outdir + abi + '/';
+          mkdirp(outdirabi, function (err) {
+            fs.readdirSync(builddir).forEach(function (file) {
+              if (fs.lstatSync(builddir + file).isFile() && file.match(/\.(exp|lib|node|dylib|exe|dll)$|^[^.]+$/)) {
+                fs.writeFileSync(outdirabi + file, fs.readFileSync(builddir + file), {
+                  mode: fs.lstatSync(builddir + file).mode
+                });
+              }
+            })
 
-				next();
-			})
-		})
-	}, function () {
-		fs.writeFileSync(outdir + 'package.json', JSON.stringify({
-			name: bundle,
-			version: manifest.version,
-			description: 'Compiled version of ' + JSON.stringify(manifest.name) + '" for ' + process.platform + '-' + process.arch,
-			repository: manifest.repository || {
-				"type" : "git"
-			  , "url" : "http://github.com/tcr/node-shyp.git"
-			},
-			os: [ process.platform ],
-			arch: [ process.arch ]
-		}));
+            next();
+          })
+        })
+      });
+    }, function () {
+      // get next semver
+      request('http://registry.npmjs.org/' + bundle + '/', {
+        json: true,
+      }, function (err, req, body) {
+        var lastversion = (body && body['dist-tags'] && body['dist-tags']['latest']);
+        if (lastversion) {
+          console.error('LAST SHYP VERSION:'.green, lastversion);
+        }
+        var nextversion = !lastversion || semver.gt(manifest.version, lastversion, true)
+          ? semver.inc(manifest.version, 'prerelease', false)
+          : semver.inc(lastversion, 'prerelease', false);
+        console.error('NEXT SHYP VERSION:'.green, nextversion);
 
-		console.error('\nPublishing "' + outdir + '"...');
+        // Write package.json for publishing.
+        fs.writeFileSync(outdir + 'package.json', JSON.stringify({
+          name: bundle,
+          version: nextversion,
+          description: 'Compiled version of ' + JSON.stringify(manifest.name) + '" for ' + process.platform + '-' + process.arch,
+          repository: manifest.repository || {
+            "type" : "git"
+            , "url" : "http://github.com/tcr/node-shyp.git"
+          },
+          os: [ process.platform ],
+          arch: [ process.arch ]
+        }));
 
-		if (args.indexOf('--dry') == -1) {
-			npm('publish', ['-f'], {
-				cwd: outdir,
-				verbose: true
-			}, next);
-		}
-	})
+        console.error('\nPublishing "' + outdir + '"...');
+
+        if (args.indexOf('--dry') == -1) {
+          npm('publish', [], {
+            cwd: outdir,
+            verbose: true
+          }, next);
+        }
+      });
+    })
+  });
 }
 
 shyp.init = function ()
 {
-	var fs = require('fs');
-	fs.readdirSync(__dirname + '/bin').forEach(function (file) {
-		console.log('writing ' + file + '...');
-		fs.writeFileSync(file, fs.readFileSync(__dirname + '/bin/' + file));
-	});
-	console.error('done. add this to your package.json:');
-	console.log('\n{\n  "scripts": {\n    "install": "node shyp-blacklist.js win32-x64 [etc...] || node-gyp rebuild"\n  }\n}');
+  var fs = require('fs');
+  fs.readdirSync(__dirname + '/bin').forEach(function (file) {
+    console.log('writing ' + file + '...');
+    fs.writeFileSync(file, fs.readFileSync(__dirname + '/bin/' + file));
+  });
+  console.error('done. add this to your package.json:');
+  console.log('\n{\n  "scripts": {\n    "install": "node shyp-blacklist.js win32-x64 [etc...] || node-gyp rebuild"\n  }\n}');
 }
 
 shyp.build = gyp.bind(null, 'build')
@@ -197,17 +225,17 @@ shyp.list = gyp.bind(null, 'list')
 shyp.remove = gyp.bind(null, 'remove')
 
 if (require.main === module) {
-	if (shyp.hasOwnProperty(process.argv[2])) {
-		shyp[process.argv[2]](process.argv.slice(3), {
-			verbose: true
-		}, function (code) {
-			process.exit(code);
-		});
-	} else {
-		console.error('Usage:');
-		Object.keys(shyp).forEach(function (a) {
-			console.error('    node-shyp ' + a);
-		});
-		process.exit(1);
-	}
+  if (shyp.hasOwnProperty(process.argv[2])) {
+    shyp[process.argv[2]](process.argv.slice(3), {
+      verbose: true
+    }, function (code) {
+      process.exit(code);
+    });
+  } else {
+    console.error('Usage:');
+    Object.keys(shyp).forEach(function (a) {
+      console.error('    node-shyp ' + a);
+    });
+    process.exit(1);
+  }
 }
