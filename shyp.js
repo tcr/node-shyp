@@ -65,7 +65,8 @@ function cmd (path, args, opts, next)
     next && next(code, out, err);
   });
   proc.on('error', function (data) {
-    stderr.push(new Buffer(data.toString()));
+    // stderr.push(new Buffer(data.toString()));
+    throw data;
   })
 
   return proc;
