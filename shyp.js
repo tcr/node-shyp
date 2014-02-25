@@ -199,7 +199,7 @@ shyp.publish = function (args, opts, next)
 
         console.error('\nPublishing "' + outdir + '"...');
 
-        if (args.indexOf('--dry') == -1) {
+        if (args.indexOf('--dry') == -1 && args.indexOf('--dry-run') == -1) {
           npm('publish', [], {
             cwd: outdir,
             verbose: true
