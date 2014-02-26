@@ -170,7 +170,7 @@ shyp.publish = function (args, opts, next)
       request('http://registry.npmjs.org/' + bundle + '/', {
         json: true,
       }, function (err, req, body) {
-        var lastversion = (body && Object.keys(body.time).filter(function (a) {
+        var lastversion = (body && body.time && Object.keys(body.time).filter(function (a) {
           return semver.valid(a) && a.match(/\-/);
         }).sort(semver.rcompare)[0]);
         if (lastversion) {
