@@ -128,7 +128,8 @@ shyp.publish = function (args, opts, next)
   // TODO have this be customizable.
   var abis = {
     'v8-3.11': '0.8.26',
-    'node-v11': '0.10.26'
+    'node-v11': '0.10.26',
+    'node-v14': '0.11.12',
   };
   abis[nodeABI()] = process.versions.node;
 
