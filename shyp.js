@@ -108,6 +108,16 @@ shyp.test = function (args, opts, next) {
   });
 }
 
+// process.versions.modules added in >= v0.10.4 and v0.11.7
+// https://github.com/joyent/node/commit/ccabd4a6fa8a6eb79d29bc3bbe9fe2b6531c2d8e
+function nodeABI () {
+  return process.versions.modules
+    ? 'node-v' + (+process.versions.modules)
+    : process.versions.v8.match(/^3\.14\./)
+      ? 'node-v11'
+      : 'v8-' + process.versions.v8.split('.').slice(0,2).join('.');
+}
+
 shyp.publish = function (args, opts, next)
 {
   var manifest = require(path.join(process.cwd(), './package.json'));
@@ -115,21 +125,11 @@ shyp.publish = function (args, opts, next)
   var outdir =  './build/shyp/';
   var builddir = './build/' + (process.config.target_defaults.defaut_configuration || 'Release') + '/'; // TODO
 
-  // process.versions.modules added in >= v0.10.4 and v0.11.7
-  // https://github.com/joyent/node/commit/ccabd4a6fa8a6eb79d29bc3bbe9fe2b6531c2d8e
-  function nodeABI () {
-    return process.versions.modules
-      ? 'node-v' + (+process.versions.modules)
-      : process.versions.v8.match(/^3\.14\./)
-        ? 'node-v11'
-        : 'v8-' + process.versions.v8.split('.').slice(0,2).join('.');
-  }
-
   // TODO have this be customizable.
   var abis = {
     'v8-3.11': '0.8.26',
     'node-v11': '0.10.26',
-    'node-v14': '0.11.12',
+    'node-v14': '0.11.13',
   };
   abis[nodeABI()] = process.versions.node;
 
@@ -229,6 +229,10 @@ shyp.rebuild = gyp.bind(null, 'rebuild')
 shyp.install = gyp.bind(null, 'install')
 shyp.list = gyp.bind(null, 'list')
 shyp.remove = gyp.bind(null, 'remove')
+
+shyp.abi = function () {
+  console.log(nodeABI());
+}
 
 if (require.main === module) {
   if (shyp.hasOwnProperty(process.argv[2])) {
