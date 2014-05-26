@@ -7,6 +7,7 @@ var mkdirp = require('mkdirp');
 var rimraf = require('rimraf');
 var request = require('request');
 var semver = require('semver');
+var os = require('os');
 require('colors');
 
 /**
@@ -77,7 +78,7 @@ function cmd (path, args, opts, next)
 
 function gyp (type, args, opts, next)
 {
-  return cmd('node-gyp', [type].concat(args || []), opts, next);
+  return cmd('node-gyp', [type].concat(args || [], os.arch() == 'x64' ? ['--msvs_version=2012'] : []), opts, next);
 }
 
 // returns a promise
