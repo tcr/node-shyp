@@ -202,10 +202,19 @@ shyp.publish = function (args, opts, next)
         console.error('\nPublishing "' + outdir + '"...');
 
         if (args.indexOf('--dry') == -1 && args.indexOf('--dry-run') == -1) {
-          npm('publish', [], {
-            cwd: outdir,
-            verbose: true
-          }, next);
+          if (args.indexOf('--pack') != -1) {
+            // publish
+            npm('pack', [], {
+              cwd: outdir,
+              verbose: true
+            }, next);
+          } else {
+            // publish
+            npm('publish', [], {
+              cwd: outdir,
+              verbose: true
+            }, next);
+          }
         }
       });
     })
