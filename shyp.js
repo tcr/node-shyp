@@ -130,7 +130,8 @@ shyp.publish = function (args, opts, next)
   var abis = {
     'v8-3.11': '0.8.26',
     'node-v11': '0.10.26',
-    'node-v14': '0.11.13',
+    'node-v14': '0.12.0',
+    'node-v42': '1.0.0',
   };
   abis[nodeABI()] = process.versions.node;
 
