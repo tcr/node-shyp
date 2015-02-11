@@ -180,11 +180,11 @@ shyp.publish = function (args, opts, next)
           console.error('LAST SHYP VERSION:'.green, lastversion);
         }
 
-        // Inc prerelease to ensure manifest.version isn't *gt* than lastversion
-        // because it lacks a prerelease tag.
-        var nextversion = !lastversion || semver.gt(semver.inc(manifest.version, 'prerelease', false), lastversion, true)
-          ? semver.inc(manifest.version, 'prerelease', false)
-          : semver.inc(lastversion, 'prerelease', false);
+        // Inc patch to ensure manifest.version isn't *gt* than lastversion
+        // because it lacks a patch tag.
+        var nextversion = !lastversion || semver.gt(semver.inc(manifest.version, 'patch', false), lastversion, true)
+          ? semver.inc(manifest.version, 'patch', false)
+          : semver.inc(lastversion, 'patch', false);
         console.error('NEXT SHYP VERSION:'.green, nextversion);
 
         // Write package.json for publishing.
