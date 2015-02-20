@@ -31,9 +31,22 @@ node@0.10.18
 
 **/
 
+function superenv (obj) {
+  var out = {};
+  for (var name in process.env) {
+    out[name] = process.env[name];
+  }
+  for (var name in obj) {
+    out[name] = obj[name];
+  }
+  return out;
+}
+
 function cmd (path, args, opts, next)
 {
   opts.cwd = opts.cwd || process.cwd();
+
+  console.error('[cmd]', path, args.join(' '));
 
   if (process.platform == 'win32') {
     args = ['/c', path].concat(args);
@@ -78,7 +91,7 @@ function cmd (path, args, opts, next)
 
 function gyp (type, args, opts, next)
 {
-  return cmd('node-gyp', [type].concat(args || [], os.arch() == 'x64' ? ['--msvs_version=2012'] : []), opts, next);
+  return cmd(__dirname + '/node_modules/.bin/pangyp', [type].concat(args || [], os.arch() == 'x64' ? ['--msvs_version=2012'] : []), opts, next);
 }
 
 // returns a promise
@@ -142,11 +155,21 @@ shyp.publish = function (args, opts, next)
     verbose: true
   }, function (code) {
     async.eachSeries(Object.keys(abis), function (abi, next) {
+      var PANGYP_RUNTIME = semver(abis[abi]).major >= 1 ? 'iojs' : 'node';
+      var newenv = superenv({ PANGYP_RUNTIME: PANGYP_RUNTIME });
+
       gyp('configure', ['--target=' + abis[abi]], {
-        verbose: true
+        verbose: true,
+        env: newenv,
       }, function (code) {
+        if (code) {
+          console.error('Error: configure failed with', code);
+          next(code);
+        }
+
         gyp('build', ['--target=' + abis[abi]], {
-          verbose: true
+          verbose: true,
+          env: newenv,
         }, function (code) {
           if (code) {
             console.error('ERR'.red, 'Could not build for module abi ' + abi + ' (node version ' + abis[abi] + '), brb dying.');
@@ -169,7 +192,12 @@ shyp.publish = function (args, opts, next)
           })
         })
       });
-    }, function () {
+    }, function (err) {
+      if (err) {
+        console.error('Build failed:', err);
+        process.exit(1);
+      }
+
       // get next semver
       request('http://registry.npmjs.org/' + bundle + '/', {
         json: true,
