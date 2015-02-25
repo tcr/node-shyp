@@ -237,7 +237,15 @@ shyp.publish = function (args, opts, next)
             npm('pack', [], {
               cwd: outdir,
               verbose: true
-            }, next);
+            }, function (err, stdout) {
+              if (!err) {
+                fs.createReadStream(outdir + stdout.toString().replace(/\s+$/, ''))
+                .pipe(fs.createWriteStream(outdir + 'shyp.tar.gz'))
+                .on('end', next);
+              } else {
+                next(err);
+              }
+            });
           } else {
             // publish
             npm('publish', [], {
