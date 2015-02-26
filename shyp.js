@@ -142,6 +142,10 @@ shyp.publish = function (args, opts, next)
   // TODO have this be customizable.
   var abis = {
     'v8-3.11': '0.8.26',
+    'node-v11': '0.10.26',
+    'node-v14': '0.12.0',
+    'node-v42': '1.0.0',
+    'node-v43': '1.1.0',
   };
   abis[nodeABI()] = process.versions.node;
 
@@ -195,7 +199,6 @@ shyp.publish = function (args, opts, next)
       }
 
       // get next semver
-      console.log('>>>> bundle', bundle);
       request('http://registry.npmjs.org/' + bundle + '/', {
         json: true,
       }, function (err, req, body) {
