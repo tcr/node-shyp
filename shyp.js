@@ -135,7 +135,7 @@ function nodeABI () {
 shyp.publish = function (args, opts, next)
 {
   var manifest = require(path.join(process.cwd(), './package.json'));
-  var bundle = manifest.name + '-shyp-' + process.platform + '-' + process.arch;
+  var bundle = manifest.name + '-shyp-' + process.platform + '-' + (args.indexOf('--ia32') == -1 ? process.arch : 'ia32');
   var outdir =  './build/shyp/';
   var builddir = './build/' + (process.config.target_defaults.defaut_configuration || 'Release') + '/'; // TODO
 
@@ -158,7 +158,7 @@ shyp.publish = function (args, opts, next)
       var PANGYP_RUNTIME = semver(abis[abi]).major >= 1 ? 'iojs' : 'node';
       var newenv = superenv({ PANGYP_RUNTIME: PANGYP_RUNTIME });
 
-      gyp('configure', ['--target=' + abis[abi]], {
+      gyp('configure', ['--target=' + abis[abi], args.indexOf('--ia32') == -1 ? '--arch=x64' : '--arch=ia32'], {
         verbose: true,
         env: newenv,
       }, function (code) {
@@ -167,7 +167,7 @@ shyp.publish = function (args, opts, next)
           next(code);
         }
 
-        gyp('build', ['--target=' + abis[abi]], {
+        gyp('build', ['--target=' + abis[abi], args.indexOf('--ia32') == -1 ? '--arch=x64' : '--arch=ia32'], {
           verbose: true,
           env: newenv,
         }, function (code) {
@@ -226,7 +226,7 @@ shyp.publish = function (args, opts, next)
             , "url" : "http://github.com/tcr/node-shyp.git"
           },
           os: [ process.platform ],
-          arch: [ process.arch ]
+          arch: [ args.indexOf('--ia32') == -1 ? process.arch : 'ia32' ]
         }));
 
         console.error('\nPublishing "' + outdir + '"...');
