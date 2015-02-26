@@ -1,6 +1,6 @@
 {
   "name": "node-shyp",
-  "version": "v0.6.1",
+  "version": "v0.6.2",
   "description": "",
   "repository": "https://github.com/tcr/node-shyp",
   "main": "shyp.js",
